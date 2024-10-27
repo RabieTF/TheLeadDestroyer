@@ -1,7 +1,7 @@
 package ports
 
 type ClientCommunicator interface {
-	SendMessage(message []byte) error
-	ReceiveMessage() ([]byte, error)
-	HandleClientDisconnect() error
+	Send(message []byte) error
+	Receive() ([]byte, error)
+	HandleDisconnect() error
 }

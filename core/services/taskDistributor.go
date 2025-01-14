@@ -6,15 +6,15 @@ import (
 	"www-apps.univ-lehavre.fr/forge/themd5destroyers/theleaddestroyer/adapters/websocket"
 )
 
-// Distributor manages the distribution of tasks to workers.
+// TaskDistributor manages the distribution of tasks to workers.
 type TaskDistributor struct {
 	TaskChannel        chan string
-	containerWSAdapter *websocket.ContainerWSAdapter
-	swarmAdapter       *docker.SwarmAdapter
+	containerWSAdapter *websocket.ContainerWebSocketAdapter
+	swarmAdapter       *docker.Adapter
 }
 
 // NewDistributor creates a new Distributor instance.
-func NewDistributor(containerWSAdapter *websocket.ContainerWSAdapter, swarmAdapter *docker.SwarmAdapter) *TaskDistributor {
+func NewDistributor(containerWSAdapter *websocket.ContainerWebSocketAdapter, swarmAdapter *docker.Adapter) *TaskDistributor {
 	return &TaskDistributor{
 		TaskChannel:        make(chan string, 100),
 		containerWSAdapter: containerWSAdapter,

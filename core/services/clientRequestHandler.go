@@ -3,17 +3,16 @@ package services
 import (
 	"log"
 	"www-apps.univ-lehavre.fr/forge/themd5destroyers/theleaddestroyer/adapters/websocket"
-	"www-apps.univ-lehavre.fr/forge/themd5destroyers/theleaddestroyer/core/taskDistribution"
 )
 
 // Handler manages client requests and forwards them to the task distributor.
 type ClientRequestHandler struct {
-	clientWSAdapter *websocket.ClientWSAdapter
-	taskDistributor *taskDistribution.Distributor
+	clientWSAdapter *websocket.ContainerWebSocketAdapter
+	taskDistributor *TaskDistributor
 }
 
 // NewHandler creates a new Handler instance.
-func NewHandler(clientWSAdapter *websocket.ClientWSAdapter, taskDistributor *taskDistribution.Distributor) *ClientRequestHandler {
+func NewHandler(clientWSAdapter *websocket.ContainerWebSocketAdapter, taskDistributor *TaskDistributor) *ClientRequestHandler {
 	return &ClientRequestHandler{
 		clientWSAdapter: clientWSAdapter,
 		taskDistributor: taskDistributor,

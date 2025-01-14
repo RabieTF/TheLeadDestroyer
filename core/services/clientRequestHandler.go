@@ -1,27 +1,26 @@
-package clientRequests
+package services
 
 import (
 	"log"
-	"theleaddestroyer/adapters/websocket"
-	"theleaddestroyer/core/taskDistribution"
+	"www-apps.univ-lehavre.fr/forge/themd5destroyers/theleaddestroyer/adapters/websocket"
 )
 
 // Handler manages client requests and forwards them to the task distributor.
-type Handler struct {
-	clientWSAdapter *websocket.ClientWSAdapter
-	taskDistributor *taskDistribution.Distributor
+type ClientRequestHandler struct {
+	clientWSAdapter *websocket.ContainerWebSocketAdapter
+	taskDistributor *TaskDistributor
 }
 
 // NewHandler creates a new Handler instance.
-func NewHandler(clientWSAdapter *websocket.ClientWSAdapter, taskDistributor *taskDistribution.Distributor) *Handler {
-	return &Handler{
+func NewHandler(clientWSAdapter *websocket.ContainerWebSocketAdapter, taskDistributor *TaskDistributor) *ClientRequestHandler {
+	return &ClientRequestHandler{
 		clientWSAdapter: clientWSAdapter,
 		taskDistributor: taskDistributor,
 	}
 }
 
 // Start begins listening for client requests.
-func (h *Handler) Start() {
+func (h *ClientRequestHandler) Start() {
 	log.Println("Client request handler started")
 	for {
 		select {

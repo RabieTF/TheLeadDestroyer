@@ -2,8 +2,10 @@ package websocket
 
 import (
 	"fmt"
-	"github.com/gorilla/websocket"
+	"log"
 	"sync"
+
+	"github.com/gorilla/websocket"
 )
 
 type ContainerWebSocketAdapter struct {
@@ -38,6 +40,7 @@ func (c *ContainerWebSocketAdapter) AddConnection(containerID, url string) error
 	}
 
 	c.connections[containerID] = conn
+	log.Printf("Container %s connected to %s\n", containerID, url)
 	return nil
 }
 
@@ -80,5 +83,16 @@ func (c *ContainerWebSocketAdapter) HandleDisconnect(containerID string) error {
 		return err
 	}
 
+	log.Printf("Container %s disconnected\n", containerID)
 	return nil
+}
+
+func (c *ContainerWebSocketAdapter) ListConnections() []string {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	ids := make([]string, 0, len(c.connections))
+	for id := range c.connections {
+		ids = append(ids, id)
+	}
+	return ids
 }

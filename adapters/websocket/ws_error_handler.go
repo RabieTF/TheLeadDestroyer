@@ -2,37 +2,37 @@ package websocket
 
 import "log"
 
-// this file is to handle the websocket errors
-
+// HandleDisconnectionError logs disconnection errors.
 func HandleDisconnectionError(err error) {
 	if err != nil {
-		log.SetPrefix("WARN")
-		log.Printf("Disconnection error: %v\n", err)
+		log.Printf("[WARN] Disconnection error: %v\n", err)
 	}
 }
 
+// HandleConnectionError logs connection errors.
 func HandleConnectionError(err error) {
 	if err != nil {
-		log.SetPrefix("FATAL")
-		log.Fatalf("Connection error: %v\n", err)
+		log.Printf("[FATAL] Connection error: %v\n", err)
 	}
 }
 
+// HandleSendError logs errors when sending messages.
 func HandleSendError(containerID string, err error) {
 	if err != nil {
-		log.SetPrefix("WARN")
-		log.Printf("Failed to send message to container %s: %v\n", containerID, err)
+		log.Printf("[WARN] Failed to send message to container %s: %v\n", containerID, err)
 	}
 }
 
+// HandleReceiveError logs errors when receiving messages.
 func HandleReceiveError(containerID string, err error) {
 	if err != nil {
-		log.SetPrefix("WARN")
-		log.Printf("Failed to receive message from container %s: %v\n", containerID, err)
+		log.Printf("[WARN] Failed to receive message from container %s: %v\n", containerID, err)
 	}
 }
+
+// HandleUnexpectedError logs unexpected errors.
 func HandleUnexpectedError(err error) {
 	if err != nil {
-		log.Fatalf("Unexpected error: %v\n", err)
+		log.Printf("[FATAL] Unexpected error: %v\n", err)
 	}
 }

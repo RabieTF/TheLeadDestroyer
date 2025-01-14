@@ -11,9 +11,6 @@ type ClientCommunicator interface {
 	// HandleDisconnect disconnects a specific client.
 	HandleDisconnect(clientID string) error
 
-	// Broadcast sends a message to all connected clients.
-	Broadcast(message []byte) error
-
 	// AddClient adds a new client connection.
 	AddClient(clientID string, conn interface{}) error
 

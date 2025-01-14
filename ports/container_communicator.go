@@ -2,11 +2,11 @@ package ports
 
 // ContainerCommunicator defines the interface for communicating with worker containers.
 type ContainerCommunicator interface {
-	// Send sends a message to a specific container.
-	Send(containerID string, message []byte) error
+	// SendMessage Send sends a message to a specific container.
+	SendMessage(containerID string, message []byte) error
 
-	// Receive receives a message from a specific container.
-	Receive(containerID string) ([]byte, error)
+	// ReceiveMessage Receive receives a message from a specific container.
+	ReceiveMessage(containerID string) ([]byte, error)
 
 	// HandleDisconnect disconnects a specific container.
 	HandleDisconnect(containerID string) error

@@ -1,21 +1,21 @@
-package taskDistribution
+package services
 
 import (
 	"log"
-	"theleaddestroyer/adapters/docker"
-	"theleaddestroyer/adapters/websocket"
+	"www-apps.univ-lehavre.fr/forge/themd5destroyers/theleaddestroyer/adapters/docker"
+	"www-apps.univ-lehavre.fr/forge/themd5destroyers/theleaddestroyer/adapters/websocket"
 )
 
 // Distributor manages the distribution of tasks to workers.
-type Distributor struct {
+type TaskDistributor struct {
 	TaskChannel        chan string
 	containerWSAdapter *websocket.ContainerWSAdapter
 	swarmAdapter       *docker.SwarmAdapter
 }
 
 // NewDistributor creates a new Distributor instance.
-func NewDistributor(containerWSAdapter *websocket.ContainerWSAdapter, swarmAdapter *docker.SwarmAdapter) *Distributor {
-	return &Distributor{
+func NewDistributor(containerWSAdapter *websocket.ContainerWSAdapter, swarmAdapter *docker.SwarmAdapter) *TaskDistributor {
+	return &TaskDistributor{
 		TaskChannel:        make(chan string, 100),
 		containerWSAdapter: containerWSAdapter,
 		swarmAdapter:       swarmAdapter,
@@ -23,7 +23,7 @@ func NewDistributor(containerWSAdapter *websocket.ContainerWSAdapter, swarmAdapt
 }
 
 // Start begins distributing tasks to workers.
-func (d *Distributor) Start() {
+func (d *TaskDistributor) Start() {
 	log.Println("Task distributor started")
 	for {
 		select {

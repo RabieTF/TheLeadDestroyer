@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  backend:
+    image: theleaddestroyer-backend
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    networks:
+      - swarm
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    deploy:
+      replicas: 1
+    networks:
+      - swarm
+
+  hash_extractor:
+    image: servuc/hash_extractor:latest
+    deploy:
+      replicas: 3
+    environment:
+      - WS_ADDR=ws://backend:8080/ws
+    command: ["./hash_extractor", "s", "ws://backend:8080/ws"]
+    depends_on:
+      - backend
+    networks:
+      - swarm
+
+networks:
+  swarm:
+    driver: overlay

@@ -9,8 +9,9 @@ import (
 )
 
 type ContainerWebSocketAdapter struct {
-	connections map[string]*websocket.Conn // Maps container IDs to WebSocket connections
-	mux         sync.Mutex
+	connections     map[string]*websocket.Conn // Maps container IDs to WebSocket connections
+	mux             sync.Mutex
+	SolutionChannel chan string
 }
 
 func NewContainerWebSocketAdapter() *ContainerWebSocketAdapter {
@@ -56,14 +57,16 @@ func (c *ContainerWebSocketAdapter) SendMessage(containerID string, message []by
 	return err
 }
 
-func (c *ContainerWebSocketAdapter) ReceiveMessage(containerID string) ([]byte, error) {
+func (c *ContainerWebSocketAdapter) ReceiveMessage(containerID string) error {
 	conn, ok := c.connections[containerID]
 	if !ok {
-		return nil, fmt.Errorf("container %s not connected", containerID)
+		return fmt.Errorf("container %s not connected", containerID)
 	}
 	_, message, err := conn.ReadMessage()
 	HandleReceiveError(containerID, err)
-	return message, err
+
+	c.SolutionChannel <- string(message)
+	return err
 }
 
 func (c *ContainerWebSocketAdapter) HandleDisconnect(containerID string) error {

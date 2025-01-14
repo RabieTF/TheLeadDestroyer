@@ -6,7 +6,7 @@ type ContainerCommunicator interface {
 	SendMessage(containerID string, message []byte) error
 
 	// ReceiveMessage Receive receives a message from a specific container.
-	ReceiveMessage(containerID string) ([]byte, error)
+	ReceiveMessage(containerID string) error
 
 	// HandleDisconnect disconnects a specific container.
 	HandleDisconnect(containerID string) error

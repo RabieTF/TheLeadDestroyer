@@ -7,7 +7,7 @@ import (
 
 // Handler manages client requests and forwards them to the task distributor.
 type ClientRequestHandler struct {
-	clientWSAdapter *websocket.ContainerWebSocketAdapter
+	clientWSAdapter *websocket.ContainerWebSocketAdapter // TODO: here it should be Client and not container.
 	taskDistributor *TaskDistributor
 }
 
@@ -23,11 +23,6 @@ func NewHandler(clientWSAdapter *websocket.ContainerWebSocketAdapter, taskDistri
 func (h *ClientRequestHandler) Start() {
 	log.Println("Client request handler started")
 	for {
-		select {
-		case hash := <-h.clientWSAdapter.HashChannel:
-			// Forward the hash to the task distributor
-			h.taskDistributor.TaskChannel <- hash
-			log.Printf("Received hash from client: %s\n", hash)
-		}
+		h.clientWSAdapter.ReceiveMessage()
 	}
 }

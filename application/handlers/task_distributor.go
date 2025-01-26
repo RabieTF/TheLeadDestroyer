@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"math"
 	"sync"
@@ -133,7 +134,15 @@ func (d *TaskDistributor) getAvailableWorker() (string, error) {
 
 // assignTaskToWorker assigns a task to a worker.
 func (d *TaskDistributor) assignTaskToWorker(workerID, hash string) error {
-	if err := d.containerWSAdapter.SendMessage(workerID, []byte(hash)); err != nil {
+	// Define the 4-character range for brute force
+	begin := "0000"
+	end := "ZZZZ"
+
+	// Construct the search message
+	message := fmt.Sprintf("search %s %s %s", hash, begin, end)
+
+	// Send the message to the worker
+	if err := d.containerWSAdapter.SendMessage(workerID, []byte(message)); err != nil {
 		d.markWorkerAvailable(workerID) // Mark the worker as available again on failure
 		return err
 	}

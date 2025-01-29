@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-
 	"www-apps.univ-lehavre.fr/forge/themd5destroyers/theleaddestroyer/adapters/docker"
 	"www-apps.univ-lehavre.fr/forge/themd5destroyers/theleaddestroyer/adapters/websocket_adapter"
 	"www-apps.univ-lehavre.fr/forge/themd5destroyers/theleaddestroyer/application/handlers"
@@ -15,12 +13,11 @@ func main() {
 	containerWSAdapter := websocket_adapter.NewContainerWebSocketAdapter()
 
 	// Initialize TaskDistributor
-	swarmAdapter, err := docker.New("MD5Destroye")
+	swarmAdapter, err := docker.New("md5onelettertest")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(swarmAdapter)
-	taskDistributor := handlers.NewDistributor(containerWSAdapter, swarmAdapter, 2, 10, 5)
+	taskDistributor := handlers.NewDistributor(containerWSAdapter, swarmAdapter, 3, 10, 1)
 	go taskDistributor.Start(ctx)
 
 	// Initialize SolutionReceiver

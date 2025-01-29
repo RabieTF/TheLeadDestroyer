@@ -77,10 +77,13 @@ func New(serviceName string) (*Adapter, error) {
 			TaskTemplate: swarm.TaskSpec{
 				ContainerSpec: &swarm.ContainerSpec{
 					Image: "servuc/hash_extractor:latest",
-					Args:  []string{"s", "ws://127.0.0.1:3000"},
+					Args:  []string{"s", "ws://127.0.0.1:3000/ws"},
 				},
 				RestartPolicy: &swarm.RestartPolicy{
 					Condition: swarm.RestartPolicyConditionAny,
+				},
+				Networks: []swarm.NetworkAttachmentConfig{
+					{Target: "host"},
 				},
 			},
 			Mode: swarm.ServiceMode{
@@ -251,6 +254,8 @@ func (d *Adapter) GetContainerIPs(ctx context.Context) ([]string, error) {
 			}
 		}
 	}
+
+	fmt.Println("IPS:", ips)
 
 	return ips, nil
 }

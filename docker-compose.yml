@@ -1,44 +1,34 @@
-version: '3.8'
+version: "3.9"
 
 services:
-  backend:
-    image: theleaddestroyer-backend
-    build: .
-    ports:
-      - "8080:8080"
+  app:
+    image: your-application-image:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app
     environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
+      - CONTAINER_TIMEOUT=10
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # For accessing Docker daemon
     networks:
-      - swarm
-
-  redis:
-    image: redis:alpine
+      - app-network
     ports:
-      - "6379:6379"
-    deploy:
-      replicas: 1
-    networks:
-      - swarm
+      - "3000:3000" # Expose the WebSocket server for the slaves to connect
 
   hash_extractor:
     image: servuc/hash_extractor:latest
     deploy:
-      replicas: 3
-    environment:
-      - WS_ADDR=ws://backend:8080/ws
-    command: ["./hash_extractor", "s", "ws://backend:8080/ws"]
-    depends_on:
-      - backend
+      replicas: 1
+      restart_policy:
+        condition: any
+    command: ["s", "ws://app:3000"] # Connect to the WebSocket server in the app
     networks:
-      - swarm
+      - app-network
+    depends_on:
+      - app
 
 networks:
-  swarm:
-    driver: overlay
+  app-network:
+    driver: bridge

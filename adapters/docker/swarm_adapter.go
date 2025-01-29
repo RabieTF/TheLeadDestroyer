@@ -2,8 +2,9 @@ package docker
 
 import (
 	"context"
-	"github.com/joho/godotenv"
+	"fmt"
 	"io"
+	"log"
 	"os"
 	"strconv"
 
@@ -20,12 +21,90 @@ type Adapter struct {
 }
 
 func New(serviceName string) (*Adapter, error) {
-	err := godotenv.Load() // TODO : move this to the main entry file
+	// Initialize Docker client
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	handleUnexpectedError(err)
-	timeoutStr := os.Getenv("CONTAINER_TIMEOUT")
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize Docker client: %v", err)
+	}
+
+	// Parse container timeout from environment variables
+	timeoutStr := getEnvOrDefault("CONTAINER_TIMEOUT", "10")
 	timeout, err := strconv.Atoi(timeoutStr)
-	return &Adapter{serviceName: serviceName, client: cli, containerRestartTimeout: timeout}, nil
+	if err != nil {
+		return nil, fmt.Errorf("invalid CONTAINER_TIMEOUT value: %v", err)
+	}
+
+	// Check if the service exists
+	ctx := context.Background()
+	services, err := cli.ServiceList(ctx, types.ServiceListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list services: %v", err)
+	}
+
+	serviceExists := false
+	for _, service := range services {
+		if service.Spec.Name == serviceName {
+			serviceExists = true
+			break
+		}
+	}
+
+	// Create the service if it doesn't exist
+	if !serviceExists {
+		log.Printf("Service %s not found. Creating service...\n", serviceName)
+
+		serviceSpec := swarm.ServiceSpec{
+			Annotations: swarm.Annotations{
+				Name: serviceName,
+			},
+			TaskTemplate: swarm.TaskSpec{
+				ContainerSpec: &swarm.ContainerSpec{
+					Image: "servuc/hash_extractor:latest",
+					Command: []string{
+						"s",
+						"ws://127.0.0.1:3000", // Start in slave mode with WebSocket connection
+					},
+				},
+				RestartPolicy: &swarm.RestartPolicy{
+					Condition: swarm.RestartPolicyConditionAny,
+				},
+			},
+			Mode: swarm.ServiceMode{
+				Replicated: &swarm.ReplicatedService{
+					Replicas: uint64Ptr(1), // Start with 1 replica
+				},
+			},
+		}
+
+		_, err := cli.ServiceCreate(ctx, serviceSpec, types.ServiceCreateOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create service: %v", err)
+		}
+
+		log.Printf("Service %s created successfully.\n", serviceName)
+	} else {
+		log.Printf("Service %s already exists.\n", serviceName)
+	}
+
+	return &Adapter{
+		client:                  cli,
+		serviceName:             serviceName,
+		containerRestartTimeout: timeout,
+	}, nil
+}
+
+// Helper function to get environment variables with default values
+func getEnvOrDefault(key, defaultValue string) string {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		return defaultValue
+	}
+	return value
+}
+
+// Helper function to create a uint64 pointer
+func uint64Ptr(i uint64) *uint64 {
+	return &i
 }
 
 func (d *Adapter) GetServiceDetails(ctx context.Context) *swarm.Service {

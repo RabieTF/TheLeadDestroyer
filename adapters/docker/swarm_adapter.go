@@ -3,15 +3,15 @@ package docker
 import (
 	"context"
 	"fmt"
-	"io"
-	"log"
-	"os"
-	"strconv"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/swarm"
 	"github.com/docker/docker/client"
+	"io"
+	"log"
+	"net"
+	"os"
+	"strconv"
 )
 
 type Adapter struct {
@@ -34,8 +34,25 @@ func New(serviceName string) (*Adapter, error) {
 		return nil, fmt.Errorf("invalid CONTAINER_TIMEOUT value: %v", err)
 	}
 
-	// Check if the service exists
+	// Check Swarm status
 	ctx := context.Background()
+	info, err := cli.Info(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Docker info: %v", err)
+	}
+
+	if info.Swarm.LocalNodeState != swarm.LocalNodeStateActive {
+		log.Println("This node is not a Swarm manager. Attempting to initialize Swarm...")
+
+		err = initializeSwarm(cli, ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize Swarm: %v", err)
+		}
+
+		log.Println("Swarm initialized successfully.")
+	}
+
+	// Check if the service exists
 	services, err := cli.ServiceList(ctx, types.ServiceListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list services: %v", err)
@@ -60,10 +77,7 @@ func New(serviceName string) (*Adapter, error) {
 			TaskTemplate: swarm.TaskSpec{
 				ContainerSpec: &swarm.ContainerSpec{
 					Image: "servuc/hash_extractor:latest",
-					Command: []string{
-						"s",
-						"ws://127.0.0.1:3000", // Start in slave mode with WebSocket connection
-					},
+					Args:  []string{"s", "ws://127.0.0.1:3000"},
 				},
 				RestartPolicy: &swarm.RestartPolicy{
 					Condition: swarm.RestartPolicyConditionAny,
@@ -91,6 +105,49 @@ func New(serviceName string) (*Adapter, error) {
 		serviceName:             serviceName,
 		containerRestartTimeout: timeout,
 	}, nil
+}
+
+// initializeSwarm attempts to initialize a Docker Swarm manager
+func initializeSwarm(cli *client.Client, ctx context.Context) error {
+	hostIP, err := getHostIPv4()
+	if err != nil {
+		return fmt.Errorf("failed to determine host IP address: %v", err)
+	}
+	req := swarm.InitRequest{
+		ListenAddr:      "0.0.0.0:2377", // Default Swarm listening address
+		AdvertiseAddr:   hostIP,
+		ForceNewCluster: false, // Set to true to force a new cluster
+	}
+
+	_, err = cli.SwarmInit(ctx, req)
+	return err
+}
+
+func getHostIPv4() (string, error) {
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return "", err
+	}
+
+	for _, iface := range interfaces {
+		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
+			continue // Ignore down or loopback interfaces
+		}
+
+		addrs, err := iface.Addrs()
+		if err != nil {
+			return "", err
+		}
+
+		for _, addr := range addrs {
+			ipNet, ok := addr.(*net.IPNet)
+			if ok && !ipNet.IP.IsLoopback() && ipNet.IP.To4() != nil {
+				return ipNet.IP.String(), nil // Return the first valid IPv4 address
+			}
+		}
+	}
+
+	return "", fmt.Errorf("no suitable IPv4 address found")
 }
 
 // Helper function to get environment variables with default values

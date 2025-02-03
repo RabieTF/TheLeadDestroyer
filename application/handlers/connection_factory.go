@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -62,7 +63,7 @@ func (cf *ConnectionFactory) HandleConnection(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	msg := string(message)
+	msg := strings.TrimSpace(string(message)) // Trim newlines and spaces
 	log.Printf("Connection type identified: %s\n", msg)
 
 	// Route the connection based on type

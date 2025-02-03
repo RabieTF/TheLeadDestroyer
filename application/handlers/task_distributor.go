@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"strings"
 	"sync"
 	"time"
 	"www-apps.univ-lehavre.fr/forge/themd5destroyers/theleaddestroyer/adapters/docker"
@@ -56,6 +57,8 @@ func (d *TaskDistributor) Start(ctx context.Context) {
 				continue
 			}
 
+			hash = strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(hash, " ", ""), "\n", ""), "\t", "")
+
 			if err := d.assignTaskToWorker(workerID, hash); err != nil {
 				log.Printf("Failed to assign task to worker %s: %v. Retrying task.\n", workerID, err)
 				go d.retryTask(hash)
@@ -96,6 +99,7 @@ func (d *TaskDistributor) manageScaling(ctx context.Context) {
 // calculateReplicas determines the number of replicas based on the queue size.
 func (d *TaskDistributor) calculateReplicas(queueSize int) int {
 	replicas := int(math.Ceil(float64(queueSize) / float64(d.threshold)))
+	fmt.Println("calculating replicas", replicas)
 	if replicas < d.minReplicas {
 		return d.minReplicas
 	}
@@ -107,15 +111,10 @@ func (d *TaskDistributor) calculateReplicas(queueSize int) int {
 
 // refreshWorkers updates the active worker list after scaling.
 func (d *TaskDistributor) refreshWorkers(ctx context.Context) {
-	workerIPs, err := d.swarmAdapter.GetContainerIPs(ctx)
-	if err != nil {
-		log.Printf("Failed to refresh workers: %v\n", err)
-		return
-	}
-
+	activeConnections := d.containerWSAdapter.ListConnections()
 	d.activeWorkers = make(map[string]bool)
-	for _, ip := range workerIPs {
-		d.activeWorkers[ip] = true // Mark all as available
+	for _, id := range activeConnections {
+		d.activeWorkers[id] = true // Mark all as available
 	}
 
 	log.Printf("Active workers refreshed: %v\n", d.activeWorkers)
@@ -135,7 +134,7 @@ func (d *TaskDistributor) getAvailableWorker() (string, error) {
 // assignTaskToWorker assigns a task to a worker.
 func (d *TaskDistributor) assignTaskToWorker(workerID, hash string) error {
 	// Define the 4-character range for brute force
-	begin := "0000"
+	begin := "0"
 	end := "ZZZZ"
 
 	// Construct the search message

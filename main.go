@@ -22,7 +22,7 @@ func main() {
 
 	// Initialize SolutionReceiver
 	resultChannel := make(chan string, 100)
-	solutionReceiver := handlers.NewSolutionReceiver(containerWSAdapter, resultChannel)
+	solutionReceiver := handlers.NewSolutionReceiver(containerWSAdapter, resultChannel, taskDistributor)
 	go solutionReceiver.Start()
 
 	// Initialize ConnectionFactory

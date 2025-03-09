@@ -31,4 +31,4 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: your-dockerhub-username/theleaddestroyer:latest
+          tags: rabietf/theleaddestroyer:latest

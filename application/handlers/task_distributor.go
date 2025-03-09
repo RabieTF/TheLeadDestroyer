@@ -186,3 +186,39 @@ func (d *TaskDistributor) RemoveHashFromQueue(hash string) {
 	defer d.mu.Unlock()
 	delete(d.activeWorkers, hash)
 }
+
+type ContainerInfo struct {
+	ID      string `json:"id"`
+	GroupID string `json:"groupId"`
+	Status  string `json:"status"`
+	Hash    string `json:"hash"`
+}
+
+func (d *TaskDistributor) GetContainersInfo() (*[]ContainerInfo, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	var containers []ContainerInfo
+
+	for workerID, assignedHash := range d.activeWorkers {
+		status := "inactif"
+		if assignedHash != "" {
+			status = "actif"
+		}
+
+		container := ContainerInfo{
+			ID:      workerID,
+			GroupID: "default",
+			Status:  status,
+			Hash:    assignedHash,
+		}
+
+		containers = append(containers, container)
+	}
+
+	if len(containers) == 0 {
+		return nil, errors.New("no active containers found")
+	}
+
+	return &containers, nil
+}

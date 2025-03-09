@@ -1,23 +1,29 @@
-# Utilisez une image de base Go
+# Use Go for building
 FROM golang:1.20-alpine AS builder
 
-# Définissez le répertoire de travail
+# Set working directory
 WORKDIR /app
 
-# Copiez les fichiers nécessaires
-COPY . .
-
-# Téléchargez les dépendances
+# Copy files
+COPY go.mod go.sum ./
 RUN go mod download
 
-# Compilez l'application
-RUN go build -o hash_extractor .
+COPY . .
 
-# Utilisez une image Alpine légère pour l'exécution
+# Build the application
+RUN go build -o app .
+
+# Use a lightweight image for running
 FROM alpine:latest
 
-# Copiez le binaire compilé
-COPY --from=builder /app/hash_extractor /hash_extractor
+# Set working directory
+WORKDIR /
 
-# Commande pour exécuter l'application
-CMD ["/hash_extractor", "s", "ws://backend:8080/ws"]
+# Copy compiled binary
+COPY --from=builder /app/app /app
+
+# Set execution permissions
+RUN chmod +x /app
+
+# Run the application
+CMD ["/app", "s", "ws://app:3000"]

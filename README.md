@@ -62,3 +62,8 @@ This project is licensed under the **MIT License**.
 ## Need Help?
 If you have any issues, feel free to open an **issue** or **pull request** on GitHub! 🚀
 
+## Github links
+
+Backend app: [https://github.com/RabieTF/TheLeadDestroyer](https://github.com/RabieTF/TheLeadDestroyer)
+Web app: [https://github.com/RabieTF/DestroyersClient](https://github.com/RabieTF/DestroyersClient)
+

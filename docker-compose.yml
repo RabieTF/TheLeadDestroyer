@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   app:
-    image: your-application-image:latest
+    image: my-app:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -11,11 +11,11 @@ services:
       - CONTAINER_TIMEOUT=10
       - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # For accessing Docker daemon
+      - /var/run/docker.sock:/var/run/docker.sock # Allow access to Docker daemon
     networks:
       - app-network
     ports:
-      - "3000:3000" # Expose the WebSocket server for the slaves to connect
+      - "8080:8080" # Expose the WebSocket server for the slaves to connect
 
   hash_extractor:
     image: servuc/hash_extractor:latest
@@ -23,7 +23,7 @@ services:
       replicas: 1
       restart_policy:
         condition: any
-    command: ["s", "ws://app:3000"] # Connect to the WebSocket server in the app
+    command: ["/hash_extractor", "s", "ws://app:3000"]
     networks:
       - app-network
     depends_on:

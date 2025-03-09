@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"strings"
@@ -32,8 +33,9 @@ func NewConnectionFactory(
 // StartServer starts the WebSocket server and handles routing connections.
 func (cf *ConnectionFactory) StartServer(port string) {
 	http.HandleFunc("/ws", cf.HandleConnection)
+	http.HandleFunc("/status", cf.handleContainersInfo)
 
-	log.Printf("WebSocket server starting on :%s\n", port)
+	log.Printf("WebSocket and HTTP status server starting on :%s\n", port)
 	err := http.ListenAndServe(":"+port, nil)
 	if err != nil {
 		log.Fatalf("Failed to start WebSocket server: %v\n", err)
@@ -108,4 +110,28 @@ func (cf *ConnectionFactory) handleSlaveConnection(conn *websocket.Conn) {
 			}
 		}
 	}()
+}
+
+func (cf *ConnectionFactory) handleContainersInfo(w http.ResponseWriter, r *http.Request) {
+	// Set CORS headers
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	containers, err := cf.taskDistributor.GetContainersInfo()
+	if err != nil {
+		log.Printf("Error getting containers info: %v\n", err)
+		http.Error(w, "Failed to fetch containers", http.StatusInternalServerError)
+		return
+	}
+
+	jsonData, err := json.Marshal(containers)
+	if err != nil {
+		log.Printf("Error marshalling containers info: %v\n", err)
+		http.Error(w, "Failed to process data", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
 }

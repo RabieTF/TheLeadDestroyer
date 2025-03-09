@@ -77,7 +77,7 @@ func New(serviceName string) (*Adapter, error) {
 			TaskTemplate: swarm.TaskSpec{
 				ContainerSpec: &swarm.ContainerSpec{
 					Image: "servuc/hash_extractor:latest",
-					Args:  []string{"s", "ws://127.0.0.1:3000/ws"},
+					Args:  []string{"s", "ws://127.0.0.1:8080/ws"},
 				},
 				RestartPolicy: &swarm.RestartPolicy{
 					Condition: swarm.RestartPolicyConditionAny,

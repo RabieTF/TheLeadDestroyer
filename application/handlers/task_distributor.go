@@ -103,7 +103,6 @@ func (d *TaskDistributor) manageScaling(ctx context.Context) {
 // calculateReplicas determines the number of replicas based on the queue size.
 func (d *TaskDistributor) calculateReplicas(queueSize int) int {
 	replicas := int(math.Ceil(float64(queueSize) / float64(d.threshold)))
-	fmt.Println("calculating replicas", replicas)
 	if replicas < d.minReplicas {
 		return d.minReplicas
 	}
@@ -116,6 +115,7 @@ func (d *TaskDistributor) calculateReplicas(queueSize int) int {
 // refreshWorkers updates the active worker list after scaling.
 func (d *TaskDistributor) refreshWorkers(ctx context.Context) {
 	activeConnections := d.containerWSAdapter.ListConnections()
+	fmt.Printf("Active connections: %d\n", len(activeConnections))
 	d.activeWorkers = make(map[string]string)
 	for _, id := range activeConnections {
 		d.activeWorkers[id] = "" // Mark all as available
@@ -143,7 +143,7 @@ func (d *TaskDistributor) assignTaskToWorker(workerID, hash string) error {
 	// Construct the search message
 	message := fmt.Sprintf("search %s %s %s", hash, begin, end)
 
-	d.activeWorkers[hash] = hash
+	d.activeWorkers[workerID] = hash
 
 	// Send the message to the worker
 	if err := d.containerWSAdapter.SendMessage(workerID, []byte(message)); err != nil {
@@ -164,6 +164,7 @@ func (d *TaskDistributor) retryTask(hash string) {
 // markWorkerAvailable marks a worker as available.
 func (d *TaskDistributor) markWorkerAvailable(workerID string) {
 	d.mu.Lock()
+	fmt.Println("Marking worker as available: ", workerID)
 	defer d.mu.Unlock()
 	d.activeWorkers[workerID] = ""
 }
@@ -172,10 +173,16 @@ func (d *TaskDistributor) GetWorkerFromHash(hash string) string {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	for k, v := range d.activeWorkers {
+	for _, v := range d.activeWorkers {
 		if v == hash {
-			return k
+			return v
 		}
 	}
 	return ""
+}
+
+func (d *TaskDistributor) RemoveHashFromQueue(hash string) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	delete(d.activeWorkers, hash)
 }

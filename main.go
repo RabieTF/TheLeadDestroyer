@@ -29,5 +29,5 @@ func main() {
 	connectionFactory := handlers.NewConnectionFactory(containerWSAdapter, taskDistributor, resultChannel)
 
 	// Start the WebSocket server
-	connectionFactory.StartServer("3000")
+	connectionFactory.StartServer("8080")
 }

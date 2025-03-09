@@ -1,29 +1,24 @@
-# Use Go for building
-FROM golang:1.20-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy files
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
 
-# Build the application
-RUN go build -o app .
+COPY .env .env
 
-# Use a lightweight image for running
+RUN go build -o TheLeadDestroyer .
+
 FROM alpine:latest
 
-# Set working directory
 WORKDIR /
 
-# Copy compiled binary
-COPY --from=builder /app/app /app
+COPY --from=builder /app/TheLeadDestroyer /TheLeadDestroyer
 
-# Set execution permissions
-RUN chmod +x /app
+RUN chmod +x /TheLeadDestroyer
 
-# Run the application
-CMD ["/app", "s", "ws://app:3000"]
+EXPOSE 8080
+
+CMD ["/TheLeadDestroyer"]

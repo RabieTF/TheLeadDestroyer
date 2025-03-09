@@ -2,32 +2,22 @@ version: "3.9"
 
 services:
   app:
-    image: my-app:latest
+    image: theleaddestroyer:latest
     build:
       context: .
       dockerfile: Dockerfile
     container_name: app
     environment:
-      - CONTAINER_TIMEOUT=10
+      - MIN_REPLICAS=1
+      - MAX_REPLICAS=5
+      - THRESHOLD=3
       - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # Allow access to Docker daemon
+      - /var/run/docker.sock:/var/run/docker.sock  # Needed for Docker SDK access
     networks:
       - app-network
     ports:
-      - "8080:8080" # Expose the WebSocket server for the slaves to connect
-
-  hash_extractor:
-    image: servuc/hash_extractor:latest
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: any
-    command: ["/hash_extractor", "s", "ws://app:3000"]
-    networks:
-      - app-network
-    depends_on:
-      - app
+      - "8080:8080"
 
 networks:
   app-network:

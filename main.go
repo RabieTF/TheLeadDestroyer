@@ -8,16 +8,14 @@ import (
 	"www-apps.univ-lehavre.fr/forge/themd5destroyers/theleaddestroyer/adapters/docker"
 	"www-apps.univ-lehavre.fr/forge/themd5destroyers/theleaddestroyer/adapters/websocket_adapter"
 	"www-apps.univ-lehavre.fr/forge/themd5destroyers/theleaddestroyer/application/handlers"
-
-	"github.com/joho/godotenv"
 )
 
 func main() {
 	ctx := context.Background()
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	//err := godotenv.Load(".env")
+	//if err != nil {
+	//	log.Fatal("Error loading .env file")
+	//}
 
 	minReplicas, err := strconv.Atoi(os.Getenv("MIN_REPLICAS"))
 	maxReplicas, err := strconv.Atoi(os.Getenv("MAX_REPLICAS"))

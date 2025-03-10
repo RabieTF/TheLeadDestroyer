@@ -24,7 +24,7 @@ docker run -d \
   -e MIN_REPLICAS=1 \
   -e MAX_REPLICAS=5 \
   -e THRESHOLD=3 \
-  your-dockerhub-username/theleaddestroyer:latest
+  rabietf/theleaddestroyer:latest
 ```
 
 ### Alternative: Use an `.env` File
@@ -42,7 +42,7 @@ docker run -d \
   -p 8080:8080 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   --env-file .env \
-  your-dockerhub-username/theleaddestroyer:latest
+  rabietf/theleaddestroyer:latest
 ```
 
 ## Interacting with the service
